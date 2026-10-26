@@ -3,19 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reading Block</title>
+    <title>Brain food</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="options">
     <div class="options-wrap">
       <header class="options-head">
         <div class="brand">
-          <span class="mark">Reading Block</span>
+          <span class="mark">Brain food</span>
         </div>
       </header>
       <p class="options-lede">
         Your reading list and preferences. Click the toolbar icon on any page to save it here;
-        every fifth save books a quiet reading block on your calendar.
+        Your first three saves book the first quiet reading block; after that, you can choose your own number.
       </p>
 
       <nav class="dash-nav">
@@ -43,7 +43,7 @@
         <section class="card">
           <h2>When can you read?</h2>
           <p class="card-note">
-            Reading Block only books on these days, inside this time window, and only where you
+            Brain food only books on these days, inside this time window, and only where you
             have no other events.
           </p>
 
@@ -74,7 +74,7 @@
 
         <section class="card">
           <h2>The reading block</h2>
-          <p class="card-note">How long each session is, and how many saves trigger one.</p>
+          <p class="card-note">The first session starts automatically after 3 saved articles. After that, you can choose the batch size.</p>
 
           <div class="field">
             <div>
@@ -86,8 +86,8 @@
 
           <div class="field">
             <div>
-              <div class="field-label">Saves per block</div>
-              <div class="field-hint">How many saved articles make one reading block.</div>
+              <div class="field-label">Articles per block</div>
+              <div class="field-hint" id="batch-size-hint">Choose how many saved articles trigger one reading block.</div>
             </div>
             <div class="field-control"><input type="number" id="batchSize" min="1" max="20" step="1" /></div>
           </div>
@@ -97,7 +97,7 @@
               <div class="field-label">Search ahead</div>
               <div class="field-hint">How many days forward to look for a free slot.</div>
             </div>
-            <div class="field-control"><input type="number" id="lookaheadDays" min="1" max="60" step="1" /></div>
+            <div class="field-control"><input type="number" id="lookaheadDays" min="1" max="14" step="1" /></div>
           </div>
         </section>
 
@@ -105,7 +105,7 @@
           <h2>Calendar</h2>
           <p class="card-note">
             Leave the calendar as <strong>primary</strong> for your main Feishu calendar. The
-            small Reading Block helper on your Mac must be running for blocks to be booked.
+            small Brain food helper on your Mac must be running for blocks to be booked.
           </p>
 
           <div class="field">
@@ -123,6 +123,13 @@
             </div>
             <div class="field-control"><input type="text" id="calendarId" /></div>
           </div>
+        </section>
+
+        <section class="card">
+          <h2>Reading review document</h2>
+          <p class="card-note">All completed readings are kept in one Feishu document, grouped by article type and sorted by completion time.</p>
+          <a id="review-doc-link" class="review-doc-link" hidden target="_blank" rel="noreferrer">Open my reading review</a>
+          <p id="review-doc-empty" class="field-hint">It will be created automatically after your first completed reading.</p>
         </section>
 
         <div class="options-foot">

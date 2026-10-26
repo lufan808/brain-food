@@ -22,7 +22,7 @@ export function eligibleItems(items) {
 /**
  * Is a full batch ready, and if so which items belong to it?
  * @param {Array} items
- * @param {number} batchSize  e.g. 5
+ * @param {number} batchSize  e.g. 3 (user-configurable)
  * @returns {{ready: boolean, batch: Array}}  When ready, `batch` is exactly the
  *          oldest `batchSize` eligible items. We take the OLDEST so the things
  *          you saved first get read first (FIFO), and we take exactly one batch

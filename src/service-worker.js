@@ -4,16 +4,17 @@
 //   1. Left-click on the toolbar icon  -> save the current page instantly.
 //   2. Right-click on the toolbar icon -> a menu to open the dashboard
 //      (your reading list and settings, in a full browser tab).
-//   3. When a save completes a batch of five, book the reading block.
+//   3. When a save completes the configured batch, book the reading block.
 //
 // There's no popup, so saving is a single click. Feedback is a small toast we
 // inject onto the page itself (top-right), with Undo. When a save completes a
-// batch of five, the toast also tells you the reading block was booked.
+// batch, the toast also tells you the reading block was booked.
 // ---------------------------------------------------------------------------
 
 import {
   getItems,
   getSettings,
+  setSettings,
   addItem,
   markBatched,
   clearBatched,
@@ -42,14 +43,31 @@ chrome.runtime.onInstalled.addListener(() => {
       title: "Settings",
       contexts: ["action"],
     });
+    chrome.contextMenus.create({
+      id: "open-notes",
+      title: "Open reading notes",
+      contexts: ["action"],
+    });
   });
 });
 
 chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === "open-notes") {
+    openNotesPanel(info.tabId);
+    return;
+  }
   // Both items open the same dashboard tab; the hash tells it where to scroll.
   const hash = info.menuItemId === "open-settings" ? "#settings" : "#reading-list";
   chrome.tabs.create({ url: chrome.runtime.getURL(DASHBOARD) + hash });
 });
+
+function openNotesPanel(tabId) {
+  if (tabId == null || !chrome.sidePanel?.open) return;
+  chrome.sidePanel.open({ tabId }).catch(() => {
+    // Chrome can reject the call when the current page is not eligible for a
+    // side panel. The article remains saved and can be opened from the list.
+  });
+}
 
 // --- When a reading block ends: pop up the review checklist ------------------
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -66,7 +84,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 // --- Left-click on the icon: save the current page --------------------------
 chrome.action.onClicked.addListener((tab) => {
-  saveCurrentTab(tab).catch((err) => console.error("Reading Block:", err));
+  saveCurrentTab(tab).catch((err) => console.error("Brain food:", err));
 });
 
 async function saveCurrentTab(tab) {
@@ -78,6 +96,7 @@ async function saveCurrentTab(tab) {
 
   // 1. Save the page right away, and work out whether this completes a batch.
   const item = await addItem({ url, title: tab.title });
+  openNotesPanel(tab.id);
   const [items, settings] = await Promise.all([getItems(), getSettings()]);
   const { ready, batch } = nextBatch(items, settings.batchSize);
 
@@ -89,7 +108,7 @@ async function saveCurrentTab(tab) {
     return;
   }
 
-  // 2b. This save completes a batch of five. Booking talks to the helper and
+  // 2b. This save completes the configured batch. Booking talks to the helper and
   //     Feishu, which takes a few seconds, so we show an instant "booking…"
   //     message FIRST (so you're never left staring at nothing), then replace it
   //     with the real result once Feishu answers.
@@ -104,6 +123,9 @@ async function saveCurrentTab(tab) {
     const reviewId = event?.id || `r${slot.start.getTime()}`;
     await addReview({ id: reviewId, itemIds: batchIds, endsAt: slot.end.getTime() });
     chrome.alarms.create(REVIEW_ALARM_PREFIX + reviewId, { when: slot.end.getTime() });
+    if (!settings.onboardingCompleted) {
+      await setSettings({ ...settings, batchSize: 3, onboardingCompleted: true });
+    }
 
     // Swap the "booking…" toast for the booked confirmation (Undo reverses the
     // whole booking).
@@ -117,7 +139,7 @@ async function saveCurrentTab(tab) {
   } catch (err) {
     // The page is saved; only the booking failed. Say so in the toast, and log
     // the details to the service worker console for debugging.
-    console.error("Reading Block: booking failed —", err);
+    console.error("Brain food: booking failed —", err);
     showInPageToast(tab.id, {
       mode: "saved",
       savedId: item.id,
@@ -183,6 +205,13 @@ function deepreadToast(opts) {
   const old = document.getElementById(HOST_ID);
   if (old) old.remove();
 
+  const dark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  const toastBg = dark ? "#1c1c1e" : "#ffffff";
+  const toastText = dark ? "#f5f5f7" : "#1d1d1f";
+  const toastMuted = dark ? "#a1a1a6" : "#6e6e73";
+  const toastBorder = dark ? "#38383a" : "#d2d2d7";
+  const toastAccent = dark ? "#8fae88" : "#7a9778";
+
   const booked = opts.mode === "booked";
   // "pending" is the brief "Saved · booking your reading block…" state shown
   // while we talk to Feishu. It has no Undo and never auto-closes; it stays put
@@ -199,8 +228,8 @@ function deepreadToast(opts) {
   const box = document.createElement("div");
   box.style.cssText =
     "display:flex;align-items:center;gap:11px;padding:11px 13px 11px 15px;" +
-    "border-radius:12px;background:#f7f1e4;color:#241d13;border:1px solid #d8cbae;" +
-    "box-shadow:0 12px 32px -12px rgba(40,30,12,.5);" +
+    `border-radius:12px;background:${toastBg};color:${toastText};border:1px solid ${toastBorder};` +
+    "box-shadow:0 12px 32px -12px rgba(0,0,0,.35);" +
     "font-family:'Avenir Next',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;" +
     "font-size:14px;line-height:1.3;opacity:0;transform:translateY(-10px);" +
     "transition:opacity .22s ease,transform .22s ease;";
@@ -211,34 +240,34 @@ function deepreadToast(opts) {
   dot.style.cssText =
     "width:8px;height:8px;border-radius:50%;flex:0 0 auto;" +
     // A warm amber while booking is in progress; the usual green otherwise.
-    (pending ? "background:#c98a1a;" : "background:#1c6b54;");
+    (pending ? "background:#b2955f;" : `background:${toastAccent};`);
 
   const text = document.createElement("div");
   if (pending) {
     const line1 = document.createElement("div");
-    line1.textContent = "Saved to Reading Block";
+    line1.textContent = "Saved to Brain food";
     line1.style.cssText = "font-weight:600;";
     const line2 = document.createElement("div");
     line2.textContent = "Booking your reading block…";
-    line2.style.cssText = "color:#6d6049;margin-top:2px;font-size:13px;";
+    line2.style.cssText = `color:${toastMuted};margin-top:2px;font-size:13px;`;
     text.append(line1, line2);
   } else if (booked) {
     const line1 = document.createElement("div");
-    line1.textContent = "Reading block booked";
+    line1.textContent = "Brain food block booked";
     line1.style.cssText = "font-weight:700;";
     const line2 = document.createElement("div");
     line2.textContent = opts.when || "";
-    line2.style.cssText = "color:#6d6049;margin-top:2px;";
+    line2.style.cssText = `color:${toastMuted};margin-top:2px;`;
     text.append(line1, line2);
   } else {
     const line1 = document.createElement("div");
-    line1.textContent = "Saved to Reading Block";
+    line1.textContent = "Saved to Brain food";
     line1.style.cssText = "font-weight:500;";
     text.append(line1);
     if (opts.note) {
       const line2 = document.createElement("div");
       line2.textContent = opts.note;
-      line2.style.cssText = "color:#6d6049;margin-top:2px;font-size:13px;";
+      line2.style.cssText = `color:${toastMuted};margin-top:2px;font-size:13px;`;
       text.append(line2);
     }
   }
@@ -246,9 +275,9 @@ function deepreadToast(opts) {
   const undo = document.createElement("button");
   undo.textContent = "Undo";
   undo.style.cssText =
-    "background:none;border:none;color:#1c6b54;font-weight:700;font-family:inherit;" +
+    `background:none;border:none;color:${toastAccent};font-weight:700;font-family:inherit;` +
     "font-size:14px;cursor:pointer;padding:4px 6px;border-radius:6px;margin-left:2px;align-self:center;";
-  undo.addEventListener("mouseenter", () => (undo.style.background = "rgba(28,107,84,.10)"));
+  undo.addEventListener("mouseenter", () => (undo.style.background = dark ? "rgba(170,201,151,.16)" : "rgba(122,151,120,.12)"));
   undo.addEventListener("mouseleave", () => (undo.style.background = "none"));
 
   // The "booking…" state has no Undo button (there's nothing to undo yet).

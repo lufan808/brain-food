@@ -6,6 +6,8 @@
 // if we ever swap to a Google Sheet or a database, only this file changes.
 // ---------------------------------------------------------------------------
 
+import { classifyArticle, normalizeCategory } from "./categories.js";
+
 // The keys under which we file our two kinds of data.
 const ITEMS_KEY = "items"; // the reading list
 const SETTINGS_KEY = "settings"; // the user's preferences
@@ -17,10 +19,14 @@ export const DEFAULT_SETTINGS = {
   windowEnd: "18:00",
   blockMinutes: 30,
   minLeadMinutes: 120,
-  batchSize: 5,
+  batchSize: 3,
   lookaheadDays: 14, // search up to two weeks ahead for a free slot
   calendarId: "primary", // change to a TEST calendar id while testing
-  eventTitle: "Reading Block",
+  eventTitle: "Brain food",
+  reviewDocumentId: null,
+  reviewDocumentUrl: null,
+  batchSizeMigrationVersion: 1,
+  onboardingCompleted: false,
 };
 
 // --- Reading list -----------------------------------------------------------
@@ -50,6 +56,14 @@ export async function addItem({ url, title }) {
     savedAt: new Date().toISOString(),
     read: false,
     batchedAt: null, // set once this item has been placed into a calendar block
+    reviewedAt: null,
+    category: classifyArticle({ title, url }),
+    notes: {
+      thoughts: "",
+      highlights: "",
+      questions: "",
+      actions: "",
+    },
   };
   await setItems([item, ...items]);
   return item;
@@ -67,6 +81,30 @@ export async function deleteItem(id) {
   const items = (await getItems()).filter((it) => it.id !== id);
   await setItems(items);
   return items;
+}
+
+export async function getItemByUrl(url) {
+  return (await getItems()).find((item) => item.url === url) || null;
+}
+
+export async function updateItemNotes(id, patch = {}) {
+  const items = (await getItems()).map((item) => {
+    if (item.id !== id) return item;
+    return {
+      ...item,
+      category: normalizeCategory(patch.category || item.category),
+      notes: {
+        thoughts: "",
+        highlights: "",
+        questions: "",
+        actions: "",
+        ...(item.notes || {}),
+        ...(patch.notes || {}),
+      },
+    };
+  });
+  await setItems(items);
+  return items.find((item) => item.id === id) || null;
 }
 
 // Mark a group of items (a batch) as scheduled, so they won't be batched again.
@@ -121,9 +159,26 @@ export async function removeReview(id) {
 
 export async function getSettings() {
   const data = await chrome.storage.local.get(SETTINGS_KEY);
+  const saved = data[SETTINGS_KEY] || {};
   // Merge saved settings over the defaults, so new default keys appear even for
   // users who saved settings before those keys existed.
-  return { ...DEFAULT_SETTINGS, ...(data[SETTINGS_KEY] || {}) };
+  const settings = { ...DEFAULT_SETTINGS, ...saved };
+  // Keep existing installs on the new product name instead of leaving their
+  // next calendar event titled with the old brand.
+  if (settings.eventTitle === "Reading Block" || settings.eventTitle === "Reading block") {
+    settings.eventTitle = DEFAULT_SETTINGS.eventTitle;
+  }
+  // Three is the new default, but the user can choose another batch size.
+  const batchSize = Number.parseInt(settings.batchSize, 10);
+  settings.batchSize = Number.isFinite(batchSize) ? Math.min(20, Math.max(1, batchSize)) : 3;
+  // Migrate the original untouched default of five to three once. After the
+  // migration, choosing five (or any other value) remains valid.
+  if (saved.batchSizeMigrationVersion !== 1 && saved.batchSize === 5) settings.batchSize = 3;
+  settings.batchSizeMigrationVersion = 1;
+  // The first successful booking always uses three articles so a new user gets
+  // an automatic, discoverable first reading session.
+  if (!settings.onboardingCompleted) settings.batchSize = 3;
+  return settings;
 }
 
 export async function setSettings(settings) {

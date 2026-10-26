@@ -7,3 +7,7 @@ node_modules/
 # Local preview/scratch files
 src/_preview_*.html
 .playwright-mcp/
+
+# Local design/export artifacts (not part of the extension runtime)
+draft_*/
+PALETTE_*.svg

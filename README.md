@@ -1,14 +1,14 @@
-# Reading Block (Lark version)
+# Brain food (Lark version)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-**Save articles with one click. Every five saves, your browser books you a quiet
+**Save articles with one click. The first three saves automatically book your first quiet
 30-minute reading block on your Feishu (Lark) calendar so you actually read
 them.**
 
 📺 [Watch the demo video (2 minutes)](https://www.youtube.com/watch?v=Q8g1hod552g)
 
-Reading Block is a Chrome extension for people who save a lot of "I'll read this
+Brain food is a Chrome extension for people who save a lot of "I'll read this
 later" links and never get back to them. Instead of another list that grows
 forever, it turns your saved reading into real appointments with yourself.
 
@@ -25,9 +25,9 @@ We all collect links. Long articles, essays, videos, threads. They pile up in
 tabs and bookmarks and read-it-later apps, and "later" never comes, because
 nothing ever puts that reading on your actual schedule.
 
-Reading Block fixes the missing step: it books the time. Save five things, and it
+Brain food fixes the missing step: it books the time. Your first three saves create the first reading block automatically; after that, you can choose your own batch size, and it
 finds a free slot on a day and time you choose (say, weekday afternoons) and puts
-a 30-minute **Reading Block** on your calendar with those five links in the
+  a 30-minute **Brain food** block on your calendar with those three links in the
 event. When the block ends, it asks what you finished, and quietly rolls anything
 you didn't into your next session.
 
@@ -39,14 +39,18 @@ It's simple on purpose. No account to create, no app to open, no list to manage.
 
 - **One-click save.** Click the toolbar icon on any article to save it. A small
   "Saved" confirmation appears in the corner of the page, with an **Undo**.
-- **Automatic scheduling.** Every five saves, it finds the next free slot inside
+- **Automatic scheduling.** The first reading block is triggered after three saves. Once that first booking succeeds, you can choose how many saves trigger later blocks; it then finds the next free slot inside
   your preferred days and hours and books a 30-minute reading block, with the
-  five links in the event notes. It only books at least two hours from now, and
+  three links in the event notes. It only books at least two hours from now, and
   at most one block per day.
-- **A reading dashboard.** Right-click the icon to open a full page with your
+- **A reading dashboard.** Right-click the Brain food icon to open a full page with your
   reading list (open, mark read, delete) and your settings.
 - **End-of-block check-in.** When a block ends, a little checklist pops up. Tick
   what you finished; anything left over goes back into your list for next time.
+- **Live reading notes.** Open the side panel while reading to save thoughts,
+  highlights, questions, next actions, and an article category.
+- **One review document.** Finished articles are written into one Feishu
+  document, grouped by category and sorted by completion time.
 
 Your reading list lives **locally in your browser**. There's no cloud server and
 no sign-up. The only thing it talks to is the small helper on your own Mac, which
@@ -77,7 +81,8 @@ That's it. No Feishu developer console clicks, no OAuth client to create.
 - **See your list or change settings:** right-click the toolbar icon → **Reading
   list** or **Settings**.
 - **Adjust your reading window:** in Settings, pick the days, the time window
-  (default weekday 2–6pm), the block length, and how many saves trigger a block.
+  (default weekday 2–6pm), the block length, and how many saved articles trigger
+  a block. The default is three.
 
 > Times like "2pm" are interpreted in **your computer's timezone**. Blocks are
 > placed at the correct moment in time regardless, so they'll never collide with
@@ -91,7 +96,7 @@ That's it. No Feishu developer console clicks, no OAuth client to create.
 - The extension only talks to the helper on your own Mac (over localhost). The
   helper only talks to your own Feishu account, through your own `lark-cli`
   login.
-- The helper refuses requests from normal websites — only the Reading Block
+- The helper refuses requests from normal websites — only the Brain food
   extension (or your own terminal) can use it.
 - There is no analytics, no cloud server, and no third party involved.
 

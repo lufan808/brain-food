@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Brain food 笔记</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="sidepanel">
+    <main class="sidepanel-wrap">
+      <header class="sidepanel-head">
+        <div>
+          <span class="mark">Reading notes</span>
+          <p class="sidepanel-kicker">边读边记，读完后自动归档</p>
+        </div>
+        <span class="save-state" id="save-state">未加载</span>
+      </header>
+
+      <section class="sidepanel-card" id="empty-state" hidden>
+        <h1>还没有保存这篇文章</h1>
+        <p>先保存当前页面，之后就可以在这里记录想法。</p>
+        <button class="btn-primary" id="save-current">保存当前文章</button>
+      </section>
+
+      <section id="notes-state" hidden>
+        <div class="sidepanel-source">
+          <div class="sidepanel-label">当前文章</div>
+          <div class="sidepanel-title" id="article-title"></div>
+          <div class="sidepanel-url" id="article-url"></div>
+        </div>
+
+        <label class="sidepanel-field">
+          <span>文章类型</span>
+          <select id="category"></select>
+        </label>
+
+        <label class="sidepanel-field">
+          <span>我的想法</span>
+          <textarea id="thoughts" rows="6" placeholder="边读边写下你的判断、联想和反思"></textarea>
+        </label>
+
+        <label class="sidepanel-field">
+          <span>重点摘录</span>
+          <textarea id="highlights" rows="4" placeholder="记录原文中值得保留的句子或观点"></textarea>
+        </label>
+
+        <label class="sidepanel-field">
+          <span>疑问</span>
+          <textarea id="questions" rows="3" placeholder="还有哪些地方需要验证或继续研究"></textarea>
+        </label>
+
+        <label class="sidepanel-field">
+          <span>下一步行动</span>
+          <textarea id="actions" rows="3" placeholder="这篇文章带来的行动、实验或待办"></textarea>
+        </label>
+
+        <p class="sidepanel-hint">内容会自动保存到本地。文章读完后，在阅读回顾窗口中勾选“读完”，插件会把它加入同一篇飞书回顾文档。</p>
+      </section>
+    </main>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

@@ -1,7 +1,14 @@
 // review.js — the little checklist that pops up when a reading block ends.
 // For each item in the block, you tick "finished" or leave it for next time.
 
-import { getReview, getItems, setItems, removeReview } from "./lib/storage.js";
+import {
+  getReview,
+  getItems,
+  getSettings,
+  setItems,
+  setSettings,
+  removeReview,
+} from "./lib/storage.js";
 
 // Which review are we showing? The window was opened with ?rid=<id>.
 const rid = new URLSearchParams(location.search).get("rid");
@@ -65,19 +72,56 @@ async function init() {
   });
 
   doneBtn.addEventListener("click", async () => {
+    doneBtn.disabled = true;
+    const status = document.getElementById("review-status");
+    status.textContent = "正在整理阅读回顾…";
+    const completedAt = new Date().toISOString();
+
     // Apply every change in a single write.
     const updated = allItems.map((it) => {
       const cb = boxes.get(it.id);
       if (!cb) return it; // not part of this block
       if (cb.checked) {
         // Finished: mark read (stays out of future blocks).
-        return { ...it, read: true };
+        return { ...it, read: true, reviewedAt: it.reviewedAt || completedAt };
       }
       // Not finished: back to waiting (unread + un-batched) so it can be
       // scheduled into a future block.
       return { ...it, read: false, batchedAt: null };
     });
     await setItems(updated);
+
+    // Keep every article that has ever been completed in the single history
+    // document, even if the user later marks it unread for another pass.
+    const reviewedItems = updated.filter((item) => item.reviewedAt);
+    if (reviewedItems.length) {
+      try {
+        const settings = await getSettings();
+        const res = await fetch("http://127.0.0.1:8787/review-document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            documentId: settings.reviewDocumentId || null,
+            documentUrl: settings.reviewDocumentUrl || null,
+            items: reviewedItems,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || `Helper error (${res.status})`);
+        }
+        await setSettings({
+          ...settings,
+          reviewDocumentId: data.documentId,
+          reviewDocumentUrl: data.url || settings.reviewDocumentUrl || null,
+        });
+      } catch (error) {
+        status.textContent = `阅读状态已保存，但回顾文档同步失败：${error.message}`;
+        doneBtn.disabled = false;
+        return;
+      }
+    }
+
     if (rid) await removeReview(rid);
     window.close();
   });

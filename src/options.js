@@ -76,7 +76,7 @@ function emptyState() {
   h.className = "display";
   h.textContent = "Nothing saved yet";
   const p = document.createElement("p");
-  p.textContent = "Click the Reading Block icon in your toolbar on any article to save it here.";
+  p.textContent = "Click the Brain food icon in your toolbar on any article to save it here.";
   li.append(ornament, h, p);
   return li;
 }
@@ -172,12 +172,29 @@ function fillSettings(settings) {
   document.getElementById("windowEnd").value = settings.windowEnd;
   document.getElementById("blockMinutes").value = settings.blockMinutes;
   document.getElementById("batchSize").value = settings.batchSize;
+  const batchInput = document.getElementById("batchSize");
+  const batchHint = document.getElementById("batch-size-hint");
+  const onboarding = !settings.onboardingCompleted;
+  batchInput.disabled = onboarding;
+  batchHint.textContent = onboarding
+    ? "首次使用固定 3 篇，首次预约成功后可以自定义。"
+    : "选择多少篇已收藏文章后触发一次阅读预约。";
   document.getElementById("lookaheadDays").value = settings.lookaheadDays;
   document.getElementById("eventTitle").value = settings.eventTitle;
   document.getElementById("calendarId").value = settings.calendarId;
+  const docLink = document.getElementById("review-doc-link");
+  const docEmpty = document.getElementById("review-doc-empty");
+  if (settings.reviewDocumentUrl) {
+    docLink.href = settings.reviewDocumentUrl;
+    docLink.hidden = false;
+    docEmpty.hidden = true;
+  } else {
+    docLink.hidden = true;
+    docEmpty.hidden = false;
+  }
 }
 
-function collectSettings() {
+function collectSettings(currentSettings) {
   const num = (id, min, max, fallback) => {
     const v = parseInt(document.getElementById(id).value, 10);
     if (Number.isNaN(v)) return fallback;
@@ -188,10 +205,16 @@ function collectSettings() {
     windowStart: document.getElementById("windowStart").value || DEFAULT_SETTINGS.windowStart,
     windowEnd: document.getElementById("windowEnd").value || DEFAULT_SETTINGS.windowEnd,
     blockMinutes: num("blockMinutes", 5, 240, DEFAULT_SETTINGS.blockMinutes),
-    batchSize: num("batchSize", 1, 20, DEFAULT_SETTINGS.batchSize),
-    lookaheadDays: num("lookaheadDays", 1, 60, DEFAULT_SETTINGS.lookaheadDays),
+    batchSize: currentSettings.onboardingCompleted
+      ? num("batchSize", 1, 20, DEFAULT_SETTINGS.batchSize)
+      : 3,
+    lookaheadDays: num("lookaheadDays", 1, 14, DEFAULT_SETTINGS.lookaheadDays),
     eventTitle: document.getElementById("eventTitle").value.trim() || DEFAULT_SETTINGS.eventTitle,
     calendarId: document.getElementById("calendarId").value.trim() || DEFAULT_SETTINGS.calendarId,
+    reviewDocumentId: currentSettings.reviewDocumentId || null,
+    reviewDocumentUrl: currentSettings.reviewDocumentUrl || null,
+    batchSizeMigrationVersion: 1,
+    onboardingCompleted: !!currentSettings.onboardingCompleted,
   };
 }
 
@@ -207,11 +230,13 @@ function flashSaved() {
 
 async function init() {
   await renderList();
-  fillSettings(await getSettings());
+  let currentSettings = await getSettings();
+  fillSettings(currentSettings);
 
   document.getElementById("save").addEventListener("click", async () => {
-    const next = collectSettings();
+    const next = collectSettings(currentSettings);
     await setSettings(next);
+    currentSettings = next;
     fillSettings(next);
     flashSaved();
   });
@@ -227,6 +252,12 @@ async function init() {
   // tab is open.
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.items) renderList();
+    if (changes.settings) {
+      getSettings().then((settings) => {
+        currentSettings = settings;
+        fillSettings(settings);
+      });
+    }
   });
 }
 

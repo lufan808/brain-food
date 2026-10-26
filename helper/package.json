@@ -1,7 +1,7 @@
 {
   "name": "reading-block-helper",
   "version": "0.1.0",
-  "description": "Local helper that lets the Reading Block extension book Focus Reading blocks on your Feishu (Lark) calendar via lark-cli.",
+  "description": "Local helper that lets the Brain food extension book Focus Reading blocks on your Feishu (Lark) calendar via lark-cli.",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,4 +1,4 @@
-// server.js — the Reading Block "helper" that runs on YOUR Mac.
+// server.js — the Brain food "helper" that runs on YOUR Mac.
 // ---------------------------------------------------------------------------
 // WHY THIS EXISTS
 //
@@ -43,11 +43,11 @@ const LARK_CLI = process.env.LARK_CLI || "lark-cli";
 // string fed to a shell). That means things like article titles or URLs are
 // passed as plain data and can never be interpreted as commands — there is no
 // shell to trick. This is the safe way to call an external program.
-function lark(args) {
+function lark(args, stdinText = null) {
   return new Promise((resolve, reject) => {
     // Every call runs as the logged-in user and asks for machine-readable JSON.
     const fullArgs = [...args, "--as", "user", "--format", "json"];
-    execFile(
+    const child = execFile(
       LARK_CLI,
       fullArgs,
       { maxBuffer: 10 * 1024 * 1024 }, // allow up to 10MB of output (calendars can be chatty)
@@ -73,6 +73,7 @@ function lark(args) {
         resolve(parsed);
       }
     );
+    if (stdinText !== null) child.stdin.end(stdinText);
   });
 }
 
@@ -108,7 +109,14 @@ function isoToUnixSeconds(iso) {
 // 1. When am I busy between two times? (so we can find a free slot)
 async function getFreeBusy({ start, end }) {
   const res = await lark(["calendar", "+freebusy", "--start", start, "--end", end]);
-  const busy = (res.data || []).map((b) => ({
+  // Older lark-cli versions returned the busy intervals directly in data.
+  // Current versions wrap them in data.users[].busy. Accept both shapes so
+  // the helper remains compatible with the installed CLI.
+  const users = Array.isArray(res.data) ? res.data : res.data?.users || [];
+  const intervals = Array.isArray(res.data)
+    ? users
+    : users.flatMap((user) => user.busy || []);
+  const busy = intervals.map((b) => ({
     start: b.start_time,
     end: b.end_time,
   }));
@@ -137,7 +145,7 @@ async function getEvents({ start, end }) {
 async function createEvent({ summary, description, start, end, calendarId, reminderMinutes }) {
   const calId = await resolveCalendarId(calendarId);
   const data = {
-    summary: summary || "Reading Block",
+    summary: summary || "Brain food",
     description: description || "",
     start_time: { timestamp: isoToUnixSeconds(start) },
     end_time: { timestamp: isoToUnixSeconds(end) },
@@ -170,6 +178,130 @@ async function deleteEvent({ eventId, calendarId }) {
     JSON.stringify({ calendar_id: calId, event_id: eventId, need_notification: false }),
   ]);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// One shared reading-review document
+// ---------------------------------------------------------------------------
+
+const REVIEW_CATEGORIES = [
+  "技术与工具",
+  "营销与业务",
+  "学习与研究",
+  "行业与趋势",
+  "生活与灵感",
+  "其他",
+];
+
+function escapeMarkdownText(value) {
+  return String(value || "")
+    .replaceAll("\\", "\\\\")
+    .replaceAll("`", "\\`")
+    .replaceAll("*", "\\*")
+    .replaceAll("_", "\\_")
+    .replaceAll("[", "\\[")
+    .replaceAll("]", "\\]")
+    .replaceAll("$", "\\$")
+    .replaceAll("~", "\\~")
+    .replaceAll("<", "\\<")
+    .split("\n")
+    .map((line) => (/^\s*[#+\->]/.test(line) ? `\\${line}` : line))
+    .join("\n");
+}
+
+function escapeMarkdownUrl(value) {
+  return String(value || "").replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
+}
+
+function buildReviewMarkdown(items) {
+  const sorted = [...items].sort(
+    (a, b) => new Date(a.reviewedAt || a.savedAt || 0) - new Date(b.reviewedAt || b.savedAt || 0)
+  );
+  const groups = new Map(REVIEW_CATEGORIES.map((category) => [category, []]));
+  sorted.forEach((item) => {
+    const category = REVIEW_CATEGORIES.includes(item.category) ? item.category : "其他";
+    groups.get(category).push(item);
+  });
+
+  const lines = [
+    "# 我的阅读回顾",
+    "",
+    "所有读完的文章都集中在这里，按文章类型分类，并在每个分类内按完成时间排序。",
+    "",
+  ];
+
+  for (const [category, categoryItems] of groups) {
+    if (!categoryItems.length) continue;
+    lines.push(`## ${escapeMarkdownText(category)}`, "");
+    for (const item of categoryItems) {
+      const date = new Date(item.reviewedAt || item.savedAt || Date.now()).toLocaleString("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const title = item.title || item.url;
+      const notes = item.notes || {};
+      lines.push(
+        `### ${escapeMarkdownText(date)} · ${escapeMarkdownText(title)}`,
+        "",
+        `原文名称：[${escapeMarkdownText(title)}](${escapeMarkdownUrl(item.url)})`,
+        `原文链接：${escapeMarkdownText(item.url)}`,
+        "",
+        "#### 回顾与自己的想法",
+        escapeMarkdownText(notes.thoughts) || "（未填写）",
+        "",
+        "#### 重点摘录",
+        escapeMarkdownText(notes.highlights) || "（未填写）",
+        "",
+        "#### 疑问",
+        escapeMarkdownText(notes.questions) || "（未填写）",
+        "",
+        "#### 下一步行动",
+        escapeMarkdownText(notes.actions) || "（未填写）",
+        "",
+        "---",
+        ""
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
+async function updateReviewDocument({ documentId, documentUrl, items }) {
+  if (!Array.isArray(items) || !items.length) {
+    throw new Error("No completed reading items to write.");
+  }
+  const markdown = buildReviewMarkdown(items);
+  if (documentId) {
+    await lark(
+      [
+        "docs",
+        "+update",
+        "--doc",
+        documentId,
+        "--command",
+        "overwrite",
+        "--doc-format",
+        "markdown",
+        "--content",
+        "-",
+      ],
+      markdown
+    );
+    return { documentId, url: documentUrl || `https://feishu.cn/docx/${documentId}` };
+  }
+
+  const created = await lark(
+    ["docs", "+create", "--doc-format", "markdown", "--content", "-"],
+    markdown
+  );
+  const document = created?.data?.document;
+  const id = document?.document_id;
+  if (!id) throw new Error("Feishu created the review document but returned no document ID.");
+  return { documentId: id, url: document.url || `https://feishu.cn/docx/${id}` };
 }
 
 // ---------------------------------------------------------------------------
@@ -222,6 +354,7 @@ const ROUTES = {
   "/events": getEvents,
   "/create": createEvent,
   "/delete": deleteEvent,
+  "/review-document": updateReviewDocument,
 };
 
 const server = http.createServer(async (req, res) => {
@@ -242,7 +375,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (!isAllowedOrigin(origin)) {
-    sendJSON(res, 403, { ok: false, error: "Only the Reading Block extension may use this helper." });
+    sendJSON(res, 403, { ok: false, error: "Only the Brain food extension may use this helper." });
     return;
   }
 
@@ -264,7 +397,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`\n  Reading Block helper is running.`);
+  console.log(`\n  Brain food helper is running.`);
   console.log(`  Listening on http://${HOST}:${PORT}`);
   console.log(`  It uses lark-cli ("${LARK_CLI}") to reach your Feishu calendar.`);
   console.log(`  Leave this window open while you use the extension. Press Ctrl+C to stop.\n`);
@@ -276,7 +409,7 @@ server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {
     console.error(
       `\n  Port ${PORT} is already in use.\n` +
-        `  The Reading Block helper is probably already running in another window.\n` +
+        `  The Brain food helper is probably already running in another window.\n` +
         `  You don't need to start it twice.\n`
     );
     process.exit(1);

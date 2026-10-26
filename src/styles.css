@@ -1,25 +1,30 @@
-/* styles.css — shared "reading room" theme for the popup and the settings page.
+/* styles.css — shared Apple-like light/dark theme for the dashboard and notes.
    ------------------------------------------------------------------------
-   Aesthetic: warm paper, espresso ink, one deep library-green accent.
-   Fonts are served from the operating system (no network calls), with a
-   curated serif stack so the wordmark feels literary rather than generic. */
+   Most of the interface stays white, black, or system gray. Plant-inspired
+   colors are deliberately restricted to small accents: actions, selected
+   states, focus rings, and status labels. */
 
 :root {
-  /* Paper & ink */
-  --paper: #f6efe1;
-  --paper-2: #fbf6ec;
+  /* Apple-like neutral surfaces */
+  --paper: #ffffff;
+  --paper-2: #f5f5f7;
   --paper-3: #ffffff;
-  --ink: #241d13;
-  --ink-soft: #6d6049;
-  --ink-faint: #9a8c72;
-  --line: #e6dcc6;
-  --line-strong: #d8cbae;
+  --ink: #1d1d1f;
+  --ink-soft: #6e6e73;
+  --ink-faint: #86868b;
+  --line: #d2d2d7;
+  --line-strong: #b8b8be;
 
-  /* Accents */
-  --green: #1c6b54;
-  --green-deep: #0f4838;
-  --green-tint: #e7efe9;
-  --ember: #bf5a2c; /* used sparingly: destructive hover, unread mark */
+  /* Small plant-inspired accents */
+  --green: #7a9778;
+  --green-deep: #4b6a4d;
+  --green-tint: #eaf1e8;
+  --on-accent: #ffffff;
+  --ember: #a7654a; /* used sparingly: destructive hover, unread mark */
+  --danger-tint: rgba(167, 101, 74, 0.12);
+  --accent-ring: rgba(122, 151, 120, 0.18);
+  --card-surface: rgba(255, 255, 255, 0.84);
+  --field-surface: rgba(255, 255, 255, 0.96);
 
   /* Type */
   --display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino,
@@ -29,8 +34,8 @@
   /* Shape */
   --radius: 12px;
   --radius-sm: 8px;
-  --shadow: 0 10px 30px -12px rgba(40, 30, 12, 0.35);
-  --shadow-sm: 0 2px 8px -3px rgba(40, 30, 12, 0.3);
+  --shadow: 0 16px 36px -20px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.18);
 }
 
 * {
@@ -42,22 +47,8 @@
 body {
   font-family: var(--sans);
   color: var(--ink);
-  /* Layered paper atmosphere: a soft warm glow plus a faint "laid paper"
-     texture made from a barely-visible repeating gradient. */
   background-color: var(--paper);
-  background-image: radial-gradient(
-      120% 80% at 100% 0%,
-      rgba(28, 107, 84, 0.06),
-      transparent 60%
-    ),
-    radial-gradient(100% 60% at 0% 100%, rgba(191, 90, 44, 0.05), transparent 55%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(120, 100, 60, 0.035) 0px,
-      rgba(120, 100, 60, 0.035) 1px,
-      transparent 1px,
-      transparent 4px
-    );
+  background-image: radial-gradient(900px 520px at 100% 0%, rgba(122, 151, 120, 0.045), transparent 70%);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -98,7 +89,7 @@ button {
   gap: 10px;
   padding: 13px 16px;
   background: var(--green);
-  color: #f4efe2;
+  color: var(--on-accent);
   border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 600;
@@ -249,7 +240,7 @@ body.popup {
 .item.read .check {
   background: var(--green);
   border-color: var(--green);
-  color: #f4efe2;
+  color: var(--on-accent);
 }
 
 .item-body {
@@ -299,7 +290,7 @@ body.popup {
   opacity: 1;
 }
 .del:hover {
-  background: rgba(191, 90, 44, 0.12);
+  background: var(--danger-tint);
   color: var(--ember);
 }
 .del svg {
@@ -452,7 +443,7 @@ input:focus {
 .day.on {
   background: var(--green);
   border-color: var(--green);
-  color: #f4efe2;
+  color: var(--on-accent);
 }
 
 .options-foot {
@@ -463,7 +454,7 @@ input:focus {
 }
 .save-btn {
   background: var(--green);
-  color: #f4efe2;
+  color: var(--on-accent);
   padding: 12px 26px;
   border-radius: var(--radius-sm);
   font-size: 14px;
@@ -510,7 +501,7 @@ input:focus {
 .dash-nav a:hover {
   background: var(--green);
   border-color: var(--green);
-  color: #f4efe2;
+  color: var(--on-accent);
 }
 
 #reading-list,
@@ -575,6 +566,17 @@ input:focus {
 .tag.scheduled {
   background: var(--green-tint);
   color: var(--green-deep);
+}
+
+.review-doc-link {
+  display: inline-block;
+  color: var(--green-deep);
+  font-weight: 650;
+  line-height: 1.4;
+  text-decoration: none;
+}
+.review-doc-link:hover {
+  text-decoration: underline;
 }
 
 /* ========================================================================
@@ -649,4 +651,168 @@ body.review {
 .review-foot .save-btn {
   width: 100%;
   text-align: center;
+}
+.review-status {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* ========================================================================
+   READING NOTES SIDE PANEL
+   ===================================================================== */
+body.sidepanel {
+  min-width: 280px;
+  background-color: var(--paper-2);
+}
+
+.sidepanel-wrap {
+  padding: 18px 16px 24px;
+}
+
+.sidepanel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sidepanel-head .mark {
+  display: block;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.sidepanel-kicker,
+.save-state,
+.sidepanel-hint {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.sidepanel-kicker {
+  margin-top: 3px;
+}
+
+.save-state {
+  white-space: nowrap;
+  padding-top: 4px;
+}
+
+.sidepanel-card,
+.sidepanel-source {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidepanel-card h1 {
+  font-family: var(--display);
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.sidepanel-card p {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+
+.sidepanel-source {
+  margin-bottom: 16px;
+}
+
+.sidepanel-label,
+.sidepanel-field > span {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.sidepanel-title {
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.sidepanel-url {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+
+.sidepanel-field {
+  display: block;
+  margin: 15px 0;
+}
+
+.sidepanel-field textarea,
+.sidepanel-field select {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--field-surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  padding: 10px 11px;
+  outline: none;
+}
+
+.sidepanel-field textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.sidepanel-field textarea:focus,
+.sidepanel-field select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.sidepanel-hint {
+  line-height: 1.55;
+  margin-top: 18px;
+}
+
+/* Follow the operating system: white by day, black/elevated charcoal by night. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #000000;
+    --paper-2: #1c1c1e;
+    --paper-3: #2c2c2e;
+    --ink: #f5f5f7;
+    --ink-soft: #a1a1a6;
+    --ink-faint: #8e8e93;
+    --line: #38383a;
+    --line-strong: #545458;
+    --green: #8fae88;
+    --green-deep: #aac997;
+    --green-tint: #2b3b2d;
+    --on-accent: #142117;
+    --ember: #c8876d;
+    --danger-tint: rgba(200, 135, 109, 0.18);
+    --accent-ring: rgba(170, 201, 151, 0.24);
+    --card-surface: rgba(28, 28, 30, 0.92);
+    --field-surface: rgba(44, 44, 46, 0.96);
+    --shadow: 0 16px 36px -20px rgba(0, 0, 0, 0.8);
+    --shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.7);
+  }
+
+  body {
+    background-image: none;
+  }
 }

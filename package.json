@@ -1,7 +1,7 @@
 {
   "name": "reading-block-lark",
   "version": "0.1.0",
-  "description": "Chrome extension: save articles and auto-schedule Focus Reading blocks on your Feishu (Lark) calendar via a local lark-cli helper.",
+  "description": "Chrome extension: Brain food saves articles and auto-schedules Focus Reading blocks on your Feishu (Lark) calendar via a local lark-cli helper.",
   "private": true,
   "type": "module",
   "scripts": {

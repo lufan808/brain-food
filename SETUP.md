@@ -1,4 +1,4 @@
-# Setting up Reading Block (Lark version)
+# Setting up Brain food (Lark version)
 
 This guide gets the extension running in Chrome and booking blocks on your Feishu
 (Lark) calendar. You only do this once. Follow it top to bottom.
@@ -27,7 +27,7 @@ Just make sure your app has the calendar scopes listed in step 3; if a command
 later complains about permissions, it returns a link to enable them.
 
 **New to `lark-cli`?** It's a general-purpose Feishu command-line tool, and this
-is its normal one-time setup (nothing here is specific to Reading Block):
+is its normal one-time setup (nothing here is specific to Brain food):
 
 1. **Install it:**
 
@@ -47,7 +47,7 @@ is its normal one-time setup (nothing here is specific to Reading Block):
    creating a brand-new app in the browser. Your App Secret is stored locally
    (in your Mac's keychain); never share it or paste it into a chat.
 
-3. **Authorize your account with the calendar permissions Reading Block needs**
+3. **Authorize your account with the calendar permissions Brain food needs**
    (this opens a Feishu approval link):
 
    ```
@@ -104,8 +104,8 @@ You can also double-click `helper/start.command` in Finder.
 3. Click **Load unpacked** (top-left).
 4. In the file picker, select **this project's folder** (the one containing
    `manifest.json`), then click Select.
-5. A card titled **Reading Block** appears. If the icon is hidden, click the
-   puzzle-piece icon in Chrome's toolbar and pin "Reading Block."
+5. A card titled **Brain food** appears. If the icon is hidden, click the
+   puzzle-piece icon in Chrome's toolbar and pin "Brain food."
 
 There is nothing to paste and no ID to copy. Because the extension only talks to
 your local helper, no Feishu console setup is needed.
@@ -114,21 +114,48 @@ your local helper, no Feishu console setup is needed.
 
 ## Part D: First use
 
-1. Open five articles and **left-click the Reading Block icon once** on each. A
+1. Open three articles and **left-click the Brain food icon once** on each. The first
+   session always uses three articles so the entry point is automatic. A
    small "Saved" confirmation appears in the corner each time.
-2. On the fifth save, the extension asks the helper to book a block. A 30-minute
-   **Reading Block** appears on the next free day in your chosen window, with the
-   five links in the event notes.
+2. On the third save, the extension asks the helper to book the first block. A 30-minute
+   **Brain food** appears on the next free day in your chosen window, with the
+   three links in the event notes.
 3. Open Feishu and check your calendar. The block should be there.
 
-To change your reading window (days, hours, block length, saves-per-block),
+After the first booking succeeds, you can change your reading window (days, hours, block length,
+or the number of articles per later block),
 right-click the toolbar icon → **Settings**.
+
+### Record thoughts while reading
+
+After saving an article, click the Brain food toolbar icon again or choose
+**Add notes** from the page's right-click menu. The Brain food side panel
+opens beside the article. Notes save automatically as you type:
+
+- My thoughts
+- Key highlights
+- Questions
+- Next actions
+- Article category
+
+The first category is suggested from the title and URL. You can change it in
+the side panel. The available categories are 技术与工具、营销与业务、学习与研究、
+行业与趋势、生活与灵感、其他.
+
+### Review document
+
+When a reading block ends, tick the articles you completed and click **Done**.
+On the first completed article, the helper creates one Feishu document. Every
+later completion updates that same document. It contains one article section
+per completed article, with the original title and link followed by your notes.
+Sections are grouped by category and sorted by completion time. You can open the
+document from the **Reading review document** card in Settings.
 
 ---
 
 ## If something goes wrong
 
-- **"Can't reach the Reading Block helper":** the helper isn't running. Start it
+- **"Can't reach the Brain food helper":** the helper isn't running. Start it
   (Part B) and leave its window open, then save again.
 - **The toast says "Couldn't book a block yet":** the page saved fine, but
   booking failed. Common causes:
@@ -137,8 +164,8 @@ right-click the toolbar icon → **Settings**.
     first."
   - **"No free slot found":** your chosen window had no meeting-free block on a
     free day in the lookahead period. Widen the window or days in Settings.
-- **Nothing happens on the 5th save:** open `chrome://extensions`, click "service
-  worker" under the Reading Block card to see the extension's logs. Errors from
+- **Nothing happens on a later save:** open `chrome://extensions`, click "service
+  worker" under the Brain food card to see the extension's logs. Errors from
   the helper also print in the helper's Terminal window.
 - **A booked block shows the wrong hour:** times like "2pm" follow **your
   computer's timezone**. The block is still at the correct moment relative to your
