@@ -689,7 +689,8 @@ body.sidepanel {
 
 .sidepanel-kicker,
 .save-state,
-.sidepanel-hint {
+.sidepanel-hint,
+.sidepanel-auto-summary {
   color: var(--ink-soft);
   font-size: 12px;
 }
@@ -786,6 +787,12 @@ body.sidepanel {
 .sidepanel-hint {
   line-height: 1.55;
   margin-top: 18px;
+}
+
+.sidepanel-auto-summary {
+  color: var(--green-deep);
+  line-height: 1.45;
+  margin: 12px 2px 0;
 }
 
 /* Follow the operating system: white by day, black/elevated charcoal by night. */

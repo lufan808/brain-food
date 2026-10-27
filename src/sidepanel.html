@@ -10,8 +10,8 @@
     <main class="sidepanel-wrap">
       <header class="sidepanel-head">
         <div>
-          <span class="mark">Reading notes</span>
-          <p class="sidepanel-kicker">边读边记，读完后自动归档</p>
+          <span class="mark">Brain food notes</span>
+          <p class="sidepanel-kicker">想到什么就写什么，读完后自动整理</p>
         </div>
         <span class="save-state" id="save-state">未加载</span>
       </header>
@@ -30,31 +30,12 @@
         </div>
 
         <label class="sidepanel-field">
-          <span>文章类型</span>
-          <select id="category"></select>
+          <span>边读边记</span>
+          <textarea id="raw-notes" rows="15" placeholder="把想到的内容全部写在这里，不需要区分想法、摘录、疑问或行动。Brain food 会在阅读结束后自动整理。"></textarea>
         </label>
 
-        <label class="sidepanel-field">
-          <span>我的想法</span>
-          <textarea id="thoughts" rows="6" placeholder="边读边写下你的判断、联想和反思"></textarea>
-        </label>
-
-        <label class="sidepanel-field">
-          <span>重点摘录</span>
-          <textarea id="highlights" rows="4" placeholder="记录原文中值得保留的句子或观点"></textarea>
-        </label>
-
-        <label class="sidepanel-field">
-          <span>疑问</span>
-          <textarea id="questions" rows="3" placeholder="还有哪些地方需要验证或继续研究"></textarea>
-        </label>
-
-        <label class="sidepanel-field">
-          <span>下一步行动</span>
-          <textarea id="actions" rows="3" placeholder="这篇文章带来的行动、实验或待办"></textarea>
-        </label>
-
-        <p class="sidepanel-hint">内容会自动保存到本地。文章读完后，在阅读回顾窗口中勾选“读完”，插件会把它加入同一篇飞书回顾文档。</p>
+        <p class="sidepanel-auto-summary" id="auto-summary">正在自动识别文章类型和笔记结构…</p>
+        <p class="sidepanel-hint">内容会自动保存到本地。你只负责记录，文章类型、重点、疑问和行动会在回顾时自动整理到同一篇飞书文档。</p>
       </section>
     </main>
     <script type="module" src="sidepanel.js"></script>

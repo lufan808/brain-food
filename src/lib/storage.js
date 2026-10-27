@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import { classifyArticle, normalizeCategory } from "./categories.js";
+import { displayRawNotes, extractNotes } from "./note-extractor.js";
 
 // The keys under which we file our two kinds of data.
 const ITEMS_KEY = "items"; // the reading list
@@ -59,6 +60,7 @@ export async function addItem({ url, title }) {
     reviewedAt: null,
     category: classifyArticle({ title, url }),
     notes: {
+      raw: "",
       thoughts: "",
       highlights: "",
       questions: "",
@@ -90,16 +92,22 @@ export async function getItemByUrl(url) {
 export async function updateItemNotes(id, patch = {}) {
   const items = (await getItems()).map((item) => {
     if (item.id !== id) return item;
+    const existingNotes = item.notes || {};
+    const raw = patch.notes?.raw ?? existingNotes.raw ?? displayRawNotes(existingNotes);
+    const extracted = extractNotes(raw);
+    const category = patch.category
+      ? normalizeCategory(patch.category)
+      : classifyArticle({ title: item.title, url: item.url, notes: raw });
     return {
       ...item,
-      category: normalizeCategory(patch.category || item.category),
+      category,
       notes: {
+        raw,
         thoughts: "",
         highlights: "",
         questions: "",
         actions: "",
-        ...(item.notes || {}),
-        ...(patch.notes || {}),
+        ...extracted,
       },
     };
   });

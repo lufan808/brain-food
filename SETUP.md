@@ -130,17 +130,14 @@ right-click the toolbar icon → **Settings**.
 
 After saving an article, click the Brain food toolbar icon again or choose
 **Add notes** from the page's right-click menu. The Brain food side panel
-opens beside the article. Notes save automatically as you type:
+opens beside the article. Write everything into the single free-form note box;
+notes save automatically as you type and are organized when you finish reading:
 
-- My thoughts
-- Key highlights
-- Questions
-- Next actions
-- Article category
+- One free-form note box for thoughts, highlights, questions, and next actions
+- Automatic article categorization based on the title, URL, and note content
 
-The first category is suggested from the title and URL. You can change it in
-the side panel. The available categories are 技术与工具、营销与业务、学习与研究、
-行业与趋势、生活与灵感、其他.
+The category is inferred automatically; users do not need to choose it manually.
+The available categories are 技术与工具、营销与业务、学习与研究、行业与趋势、生活与灵感、其他.
 
 ### Review document
 

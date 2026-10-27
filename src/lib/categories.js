@@ -102,8 +102,8 @@ export function normalizeCategory(category) {
   return CATEGORY_OPTIONS.includes(category) ? category : "其他";
 }
 
-export function classifyArticle({ title = "", url = "" } = {}) {
-  const text = `${title} ${url}`.toLowerCase();
+export function classifyArticle({ title = "", url = "", notes = "" } = {}) {
+  const text = (title + " " + url + " " + notes).toLowerCase();
   const match = RULES.find((rule) => rule.words.some((word) => text.includes(word)));
   return match?.category || "其他";
 }

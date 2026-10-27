@@ -48,7 +48,8 @@ It's simple on purpose. No account to create, no app to open, no list to manage.
 - **End-of-block check-in.** When a block ends, a little checklist pops up. Tick
   what you finished; anything left over goes back into your list for next time.
 - **Live reading notes.** Open the side panel while reading to save thoughts,
-  highlights, questions, next actions, and an article category.
+  highlights, questions, next actions, and the article category.
+  Write freely in one note box; Brain food extracts these sections automatically.
 - **One review document.** Finished articles are written into one Feishu
   document, grouped by category and sorted by completion time.
 

@@ -1,9 +1,8 @@
 import { addItem, getItemByUrl, updateItemNotes } from "./lib/storage.js";
-import { CATEGORY_OPTIONS, normalizeCategory } from "./lib/categories.js";
+import { extractNotes, displayRawNotes } from "./lib/note-extractor.js";
 
 let currentItem = null;
 let saveTimer = null;
-const fields = ["thoughts", "highlights", "questions", "actions"];
 
 async function activeTab() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -18,16 +17,19 @@ function setSaveState(text) {
   document.getElementById("save-state").textContent = text;
 }
 
-function populateCategories(selected) {
-  const select = document.getElementById("category");
-  select.replaceChildren();
-  CATEGORY_OPTIONS.forEach((category) => {
-    const option = document.createElement("option");
-    option.value = category;
-    option.textContent = category;
-    option.selected = category === normalizeCategory(selected);
-    select.appendChild(option);
-  });
+function updateAutoSummary(item, raw) {
+  const extracted = extractNotes(raw);
+  const sections = [
+    ["想法", extracted.thoughts],
+    ["重点", extracted.highlights],
+    ["疑问", extracted.questions],
+    ["行动", extracted.actions],
+  ]
+    .filter(([, value]) => value)
+    .map(([label]) => label);
+  const detail = sections.length ? "已识别：" + sections.join("、") : "会在你输入后自动提炼";
+  document.getElementById("auto-summary").textContent =
+    "自动分类：" + (item.category || "其他") + " · " + detail;
 }
 
 function renderItem(item) {
@@ -36,11 +38,10 @@ function renderItem(item) {
   setVisible("notes-state", true);
   document.getElementById("article-title").textContent = item.title || item.url;
   document.getElementById("article-url").textContent = item.url;
-  populateCategories(item.category);
   const notes = item.notes || {};
-  fields.forEach((field) => {
-    document.getElementById(field).value = notes[field] || "";
-  });
+  const raw = displayRawNotes(notes);
+  document.getElementById("raw-notes").value = raw;
+  updateAutoSummary(item, raw);
   setSaveState("已加载");
 }
 
@@ -71,11 +72,11 @@ async function saveCurrent() {
 
 async function persistNotes() {
   if (!currentItem) return;
-  const notes = Object.fromEntries(fields.map((field) => [field, document.getElementById(field).value]));
+  const raw = document.getElementById("raw-notes").value;
   currentItem = await updateItemNotes(currentItem.id, {
-    category: document.getElementById("category").value,
-    notes,
+    notes: { raw },
   });
+  updateAutoSummary(currentItem, raw);
   setSaveState("已自动保存");
 }
 
@@ -88,7 +89,6 @@ function scheduleSave() {
 document.getElementById("save-current").addEventListener("click", () => {
   saveCurrent().catch(() => setSaveState("保存失败"));
 });
-fields.forEach((field) => document.getElementById(field).addEventListener("input", scheduleSave));
-document.getElementById("category").addEventListener("change", scheduleSave);
+document.getElementById("raw-notes").addEventListener("input", scheduleSave);
 
 loadForCurrentTab().catch(() => setSaveState("加载失败"));
